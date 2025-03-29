@@ -1,0 +1,13 @@
+1   121/205/255   2   121/205/255   ; Noachian Highland
+2   76/230/225    3   76/230/225    ; Hesperian Highland
+3   128/255/212   4   128/255/212   ; Transition
+4   144/238/144   5   144/238/144   ; Lowlands
+5   255/253/208   6   255/253/208   ; Impact Basin
+6   255/204/153   7   255/204/153   ; Volcanic
+7   255/153/153   8   255/153/153   ; North Polar Deposits
+8   204/153/255   9   204/153/255   ; North Polar Cap
+9   255/153/204   10   255/153/204   ; South Polar Deposits
+10   255/235/255   11  255/235/255   ; South Polar Cap
+B white
+F white
+N black

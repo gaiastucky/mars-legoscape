@@ -1,0 +1,118 @@
+#!/bin/bash
+
+# This script creates a topographic map of Mars using GMT for lego building purposes
+# G. Stucky de Quay, March 2025
+
+
+########## Settings and Parameters ######################################
+# Output figure name 
+out_name="../figures/topo_map_mars"
+title="Topographic Map of Mars"
+subtitle="EAPS Mars Legoscape Project"
+find_coord="no"; coords="2 45" #this is a tool to also plot the location of a give coordinate, set to "yes" (long., lat. in decimal degrees)
+#useful for finding the coordinates (e.g. 1A) of a specific location on the map for adding our own features later
+
+# Set Mars ellipsoid for GMT plotting
+gmt set PROJ_ELLIPSOID = Mars
+gmt set FONT_TITLE = 12p,Helvetica,black
+gmt set FONT_SUBTITLE = 10p,Helvetica,black
+gmt set FONT_LABEL = 8p,Helvetica,black
+gmt set FONT_ANNOT_PRIMARY = 8p,Helvetica,black
+gmt set FONT_ANNOT_SECONDARY = 8p,Helvetica,black
+
+# Define input DEM file
+raw_mola="../../Global_Data/Mars/MOLA/Mars_MGS_MOLA_DEM_mosaic_global_463m.tiff" # few GB file
+mars_topo="../input_data/mars_dem_km.nc"
+
+# Set desired number of pixels
+pix_w=96; pix_h=48 # horizontal/vertical number of lego plates
+##########################################################################
+
+
+########## Pre-processing and Creation of Input Files #################### - Can comment out block once done
+# Convert the DEM to desired pixel size, ESRI:104971 (Mars) projection, and then convert to a netcdf format
+gdalwarp -overwrite -t_srs ESRI:104971 -te -180 -90 180 90 -ts ${pix_w} ${pix_h} -r near ${raw_mola} mars_dem_coarse.tif #time-consuming
+gmt grdconvert mars_dem_coarse.tif -Gmars_dem_pixelated.nc
+gmt grdmath mars_dem_pixelated.nc 0.001 MUL = ${mars_topo}
+
+# Create grid lines for lego building facilitation 
+for i in $(seq 0 1 98); do 
+  echo "$i 0" >> grid_v.txt
+  echo "$i 50" >> grid_v.txt
+  echo ">" >> grid_v.txt
+done
+
+for j in $(seq 0 1 50); do # Add an extra horizontal line at y=25 for labels
+  echo "0 $j" >> grid_h.txt 
+  echo "98 $j" >> grid_h.txt
+  echo ">" >> grid_h.txt
+done
+
+# Create a file with row labels (1, 2, 3, etc.)
+for i in $(seq 0 1 95); do
+  # Add 0.5 to center the number in the cell
+  # Set y to 25 for the top row
+  echo "$(echo "$i + 0.5" | bc) 49 $((i+1))" >> h_labels.txt
+done
+
+rm -f v_labels.txt
+# Start at row 48 (second from top) to leave the topmost square blank
+for j in $(seq 48 -1 1); do
+  position=$(echo "49 - $j" | bc)
+  
+  if [ $position -le 26 ]; then
+    # English uppercase letters A-Z
+    label=$(echo "$position" | awk '{printf("%c", 64+$1)}')
+  else
+    # English lowercase letters a-z
+    lowercase_position=$(echo "$position - 26" | bc)
+    label=$(echo "$lowercase_position" | awk '{printf("%c", 96+$1)}')
+  fi
+  
+  echo "49.5 $j $label" >> v_labels.txt
+done
+##########################################################################
+
+########## Plotting the Topographic Map ##################################
+# Begin the plot
+gmt begin ${out_name} png
+
+  # Plot pixelated, projected topographic map
+  gmt grdimage ${mars_topo} -Cmars_topo.cpt -JH0/12i -B+t"${title}"+s"${subtitle}" -N -Rg -nn+a # Hammer Projection (allows for south polar cap to be imaged)
+
+#=============== COORDINATE FINDER TOOL =================================
+  if [ $find_coord == "yes" ]; then
+    # If you want more coordinates, you can just add then underneath ${coords}, and add "-L" and remove -Ss to make a "line"
+    gmt psxy -Ss0.25 -Gblack << EOF #-Ss0.1 means plot a square with a side length of 0.1 degree
+      ${coords}
+EOF
+  fi
+#========================================================================
+
+  # Add plot elements e.g., grids and labels (note: 12i / 48 pix = 0.125i per pixel)
+  gmt plot grid_v.txt grid_h.txt -JX12.250i/6.250i -R0/98/0/50 -Wthinner,darkgray -N -X-0.125i -Y-0.125i # grid overlay
+  gmt text h_labels.txt -JX12.250i/6.250i -R0/98/0/50 -N -F+f6p,Helvetica,black+jCB -X0.125i -Y0.03i  # top labels (1, 2, 3, ...)
+  gmt text h_labels.txt -JX12.250i/6.250i -R0/98/0/50 -N -F+f6p,Helvetica,black+jCB -Y-6.125i  # bottom
+  gmt text v_labels.txt -JX12.250i/6.250i -R0/98/0/50 -N -F+f6p,Helvetica,black+jCT -Y6.185i -X5.875i # right labels (A, B, C, ...)
+  gmt text v_labels.txt -JX12.250i/6.250i -R0/98/0/50 -N -F+f6p,Helvetica,black+jCT -X-12.125i # left
+
+  # Create a colorbar with annotations
+  gmt colorbar -Cmars_topo.cpt -DjBC+o0/-0.75i+w7.5i/0.3i+h+e -L0.0 -X6.125i -S+y"Elevation" -G-8/12 # put plate labels
+  gmt colorbar -Cmars_topo.cpt -DjBC+o0/-0.75i+w7.5i/0.3i+h+m -Ba2f1+u" km" -N100 -G-8/12 # add elevation in km on top
+
+gmt end show # End the plot and display it
+##########################################################################
+
+
+########## Bin and count elevations ########################################
+# First create the binned data
+gmt grdmath mars_dem_km.nc 8 ADD 2 DIV FLOOR 1 ADD = mars_dem_binned.nc
+# Project the grid using grdproject
+gmt grdproject mars_dem_binned.nc -JH0/6i -Rg -Gtopo_projected.nc -nn+a # This applies the same Hammer projection while preserving the actual "plate" values
+# Convert the projected grid to GeoTIFF format (for counting ease)
+gmt grdconvert topo_projected.nc ${out_name}_bins.tif=gd:GTiff
+############################################################################
+
+
+# Clean up
+rm -f mars_dem_coarse.tif grid_v.txt grid_h.txt v_labels.txt h_labels.txt mars_dem_pixelated.nc mars_dem_binned.nc topo_projected.nc mars_dem_pixelated.nc

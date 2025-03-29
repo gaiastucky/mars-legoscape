@@ -1,0 +1,30 @@
+name: mars-lego-env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Python core
+  - python=3.9
+  
+  # GMT and dependencies
+  - gmt=6.4.0
+  - ghostscript
+  - gdal
+  - netcdf4
+  - proj
+  
+  # Python packages for analysis
+  - numpy
+  - pillow
+  - rasterio
+  - matplotlib
+  - scipy
+  
+  # Utilities
+  - bc
+  - imagemagick
+  - pip
+  
+  # Add pip packages if needed
+  - pip:
+    - tqdm  # optional progress bars
