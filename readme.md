@@ -43,9 +43,6 @@ After generating the maps, count the LEGO plates/bricks needed for each map:
 ```bash
 # Within the script below, make sure you set the topo_or_geo variable (it only does one of the other)
 python count_plates.py
-
-# For topographic map
-python count_pixels.py topo figures/topo_map_mars_raw_heights.tif
 ```
 
 #### Querying lat/long locations
