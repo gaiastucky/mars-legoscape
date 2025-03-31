@@ -1,0 +1,27 @@
+
+#!/bin/bash
+
+# Make a 3D simulation of the lego block topography on Mars
+
+gmt set PROJ_ELLIPSOID = Mars
+
+mars_topo="../figures/topo_map_mars_bins.tif"
+out_name="../figures/lego_3Dviz"
+
+gmt grdconvert ${mars_topo} block.nc
+gmt grd2xyz block.nc > mars_topo.xyz
+
+gmt begin ${out_name} png
+  
+  # Set up perspective view
+  gmt basemap -JX0/6i -JZ2i -p20/40 -R0.079375/15.160625/0.079375/7.540625/0/14 -B+gblack
+  # Plot elevation points as vertical bars in orange
+  gmt plot3d mars_topo.xyz -So0.120i -G255/140/0 -Bza1+lPlates -p
+  
+gmt end show
+
+# Clean up
+rm -f block.nc mars_topo.xyz
+
+
+

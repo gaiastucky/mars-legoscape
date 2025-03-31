@@ -4,7 +4,7 @@ from collections import Counter
 
 # Calculate plates needed for the map depending on the type of map
 ####################
-geo_or_topo = "topo"
+geo_or_topo = "geo" #change this to "geo" or "topo"
 ####################
 
 if geo_or_topo == "geo":
