@@ -18,7 +18,6 @@ gmt set FONT_LABEL = 8p,Helvetica,black
 gmt set FONT_ANNOT_PRIMARY = 8p,Helvetica,black
 gmt set FONT_ANNOT_SECONDARY = 8p,Helvetica,black
 
-
 # Define input file from geology map (must be raster/grid) - preprocessing done in QGIS
 mars_geo="../input_data/geo_simp_ras.tif" #resolution = 1 degree; geological units = 11
 
