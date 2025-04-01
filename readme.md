@@ -18,9 +18,9 @@ Tools for creating geological and topographic maps of Mars for LEGO model buildi
    conda activate mars-lego-env
    ```
 
-### Running the Scripts
+## Running the Scripts
 
-#### Generate Topographic and Geologic Maps
+### Generate Topographic and Geologic Maps
 
 ```bash
 # Move to the scipts directory where all the action is
@@ -36,16 +36,19 @@ chmod u+x plot_geo_map.gmt
 ```
 These scripts allow us to project the data nicely onto a PNG file, and add on a grid to facilitate the building of the legoscape by using reference lines. *Note that the map is given a new lego-mapping coordinate system (1-96 horizontally, A-Z, a-v vertically).* 
 
-#### Count LEGO Pieces
+### Count LEGO Pieces
 
 After generating the maps, count the LEGO plates/bricks needed for each map:
 
 ```bash
 # Within the script below, make sure you set the topo_or_geo variable (it only does one of the other)
 python count_plates.py
+
+# For topographic map
+python count_pixels.py topo figures/topo_map_mars_raw_heights.tif
 ```
 
-#### Querying lat/long locations
+### Querying lat/long locations
 
 Note that there is the option (in the ) for querying the location of specific lat/long locations. In the `plot_topo_map.gmt` script mentioned above, you can inpur a coordinate (as the variable coords = 0 0, for example), and it will plot this point on the map, allowing you to find its location in the Lego Coordinate System. 
 
@@ -73,7 +76,7 @@ Note that there is the option (in the ) for querying the location of specific la
 ### Mars Topographic Data: 
 - Global digital elevation model (DEM) from Mars Orbiter Laser Altimeter (MOLA)
 - Downsampled and projected as above (but using "nearest neighbour" resampling)
-- Converted to km,
+- Converted to km
 - Data download source: https://astrogeology.usgs.gov/search/map/mars_mgs_mola_dem_463m
 - Citation: https://doi.org/10.1029/2000JE001364
 
